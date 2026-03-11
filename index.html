@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unverified HOS Logs</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #2a2a2a;
+    background: #f5f6f8;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1a2e;
+  }
+
+  /* Controls bar */
+  .controls {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .control-group label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.5px;
+  }
+
+  /* Multi-select dropdown */
+  .multi-select {
+    position: relative;
+    min-width: 280px;
+  }
+
+  .multi-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 38px;
+    user-select: none;
+  }
+
+  .multi-select-trigger:hover { border-color: #888; }
+  .multi-select-trigger .arrow { font-size: 10px; color: #888; margin-left: 8px; }
+
+  .multi-select-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+
+  .multi-select-dropdown.open { display: block; }
+
+  .multi-select-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .group-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.1s;
+  }
+
+  .group-item:hover { background: #f0f4ff; }
+
+  .group-item input[type="checkbox"] {
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .group-item .indent { display: inline-block; }
+
+  /* Date range buttons */
+  .date-buttons {
+    display: flex;
+    gap: 4px;
+  }
+
+  .date-btn {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.15s;
+    color: #333;
+  }
+
+  .date-btn:hover { background: #f0f0f0; }
+
+  .date-btn.active {
+    background: #1a73e8;
+    color: #fff;
+    border-color: #1a73e8;
+  }
+
+  /* Run button */
+  .run-btn {
+    padding: 8px 24px;
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.15s;
+    min-height: 38px;
+  }
+
+  .run-btn:hover { background: #1557b0; }
+  .run-btn:disabled { background: #94bef7; cursor: not-allowed; }
+
+  /* Summary stats */
+  .summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px 24px;
+    min-width: 180px;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  /* Progress bar */
+  .progress-container {
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .progress-container.visible { display: block; }
+
+  .progress-bar-track {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: #1a73e8;
+    border-radius: 3px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 6px;
+  }
+
+  /* Loading spinner */
+  .spinner-overlay {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .spinner-overlay.visible { display: block; }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Table */
+  .table-container {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #555;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e0e0e0;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  thead th:hover { background: #eef1f5; }
+  thead th .sort-arrow { margin-left: 4px; font-size: 10px; }
+
+  tbody tr { border-bottom: 1px solid #f0f0f0; }
+  tbody tr:hover { background: #f8faff; }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .unverified-count {
+    font-weight: 700;
+    color: #d93025;
+  }
+
+  .link-cell a {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .link-cell a:hover { text-decoration: underline; }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+    font-size: 15px;
+  }
+
+  /* Standalone login */
+  .login-panel {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 32px;
+    max-width: 420px;
+    margin: 60px auto;
+  }
+
+  .login-panel h2 { font-size: 18px; margin-bottom: 20px; }
+
+  .login-panel .field {
+    margin-bottom: 14px;
+  }
+
+  .login-panel .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #444;
+  }
+
+  .login-panel .field input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .login-panel .login-btn {
+    width: 100%;
+    padding: 10px;
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .login-panel .login-btn:hover { background: #1557b0; }
+
+  .login-error {
+    color: #d93025;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* Click-outside helper */
+  .click-shield {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 99;
+  }
+
+  .click-shield.open { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Login panel for standalone testing -->
+<div id="loginPanel" class="login-panel" style="display:none;">
+  <h2>Connect to MyGeotab</h2>
+  <div class="field">
+    <label>Database</label>
+    <input type="text" id="loginDb" value="geotab_fleet" />
+  </div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="loginUser" />
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="loginPass" />
+  </div>
+  <div class="field">
+    <label>Server (optional)</label>
+    <input type="text" id="loginServer" placeholder="my.geotab.com" />
+  </div>
+  <button class="login-btn" id="loginBtn">Sign In</button>
+  <div class="login-error" id="loginError"></div>
+</div>
+
+<!-- Main app -->
+<div id="app" class="container" style="display:none;">
+  <h1>Unverified HOS Logs</h1>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Group Filter</label>
+      <div class="multi-select" id="groupSelect">
+        <div class="multi-select-trigger" id="groupTrigger">
+          <span id="groupLabel">Company Group (All)</span>
+          <span class="arrow">&#9660;</span>
+        </div>
+        <div class="multi-select-dropdown" id="groupDropdown">
+          <input type="text" class="multi-select-search" id="groupSearch" placeholder="Search groups..." />
+          <div id="groupList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Date Range</label>
+      <div class="date-buttons">
+        <button class="date-btn" data-days="7">7 Days</button>
+        <button class="date-btn active" data-days="14">14 Days</button>
+        <button class="date-btn" data-days="30">30 Days</button>
+        <button class="date-btn" data-days="all">All</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="run-btn" id="runBtn">Run Report</button>
+    </div>
+  </div>
+
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText">Loading...</div>
+  </div>
+
+  <div class="summary" id="summary" style="display:none;">
+    <div class="stat-card">
+      <div class="value" id="statDrivers">0</div>
+      <div class="label">Drivers with Unverified Logs</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statDays">0</div>
+      <div class="label">Total Unverified Days</div>
+    </div>
+  </div>
+
+  <div class="spinner-overlay" id="spinner">
+    <div class="spinner"></div>
+    <div>Loading data...</div>
+  </div>
+
+  <div id="resultsArea"></div>
+</div>
+
+<div class="click-shield" id="clickShield"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── State ──
+  let api = null;
+  let state = null;
+  let database = "geotab_fleet";
+  let serverUrl = "my.geotab.com";
+  let groupTree = [];          // flat list with parentId
+  let selectedGroupIds = new Set();
+  let deviceMap = {};          // deviceId → name
+  let selectedDays = 14;
+  let isRunning = false;
+  let isEmbedded = false;
+
+  // ── Detect if running inside MyGeotab ──
+  function detectEnvironment() {
+    if (typeof geotab !== "undefined" || window.geotab) {
+      return true;
+    }
+    return false;
+  }
+
+  // ── MyGeotab Add-In lifecycle ──
+  window.geotab = window.geotab || {};
+  window.geotab.addin = window.geotab.addin || {};
+  window.geotab.addin.unverifiedHosLogs = function () {
+    return {
+      initialize: function (freshApi, pageState, callback) {
+        api = freshApi;
+        state = pageState;
+        isEmbedded = true;
+        document.getElementById("app").style.display = "block";
+        document.getElementById("loginPanel").style.display = "none";
+        if (callback) callback();
+      },
+      focus: function (freshApi, pageState) {
+        api = freshApi;
+        state = pageState;
+        loadGroupTree().then(function () {
+          runReport();
+        });
+      },
+      blur: function () {}
+    };
+  };
+
+  // ── Standalone bootstrap ──
+  document.addEventListener("DOMContentLoaded", function () {
+    // If embedded, the lifecycle hooks handle it
+    setTimeout(function () {
+      if (!isEmbedded) {
+        document.getElementById("loginPanel").style.display = "block";
+      }
+    }, 200);
+  });
+
+  document.getElementById("loginBtn").addEventListener("click", function () {
+    var db = document.getElementById("loginDb").value.trim();
+    var user = document.getElementById("loginUser").value.trim();
+    var pass = document.getElementById("loginPass").value.trim();
+    var server = document.getElementById("loginServer").value.trim() || "my.geotab.com";
+
+    if (!db || !user || !pass) {
+      showLoginError("Please fill in all required fields.");
+      return;
+    }
+
+    database = db;
+    serverUrl = server;
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("loginBtn").textContent = "Signing in...";
+    document.getElementById("loginBtn").disabled = true;
+
+    standaloneAuth(server, db, user, pass);
+  });
+
+  function showLoginError(msg) {
+    var el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+
+  function standaloneAuth(server, db, user, pass) {
+    var url = "https://" + server + "/apiv1";
+    jsonRpc(url, "Authenticate", { userName: user, password: pass, database: db })
+      .then(function (result) {
+        var creds = result;
+        // Build a lightweight api wrapper
+        var sessionUrl = "https://" + (creds.path || server) + "/apiv1";
+        api = buildApiWrapper(sessionUrl, creds);
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        loadGroupTree().then(function () { runReport(); });
+      })
+      .catch(function (err) {
+        showLoginError("Authentication failed: " + (err.message || err));
+        document.getElementById("loginBtn").textContent = "Sign In";
+        document.getElementById("loginBtn").disabled = false;
+      });
+  }
+
+  function jsonRpc(url, method, params) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method: method, params: params })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+      return data.result;
+    });
+  }
+
+  function buildApiWrapper(url, creds) {
+    function call(method, params, cb) {
+      params = params || {};
+      params.credentials = creds;
+      var promise = jsonRpc(url, method, params);
+      if (cb) {
+        promise.then(function (r) { cb(r); }, function (e) { cb(null, e); });
+      }
+      return promise;
+    }
+
+    function multiCall(calls, cb) {
+      var wrappedCalls = calls.map(function (c) {
+        var p = Object.assign({}, c[1] || {});
+        p.credentials = creds;
+        return [c[0], p];
+      });
+      var promise = jsonRpc(url, "ExecuteMultiCall", { calls: wrappedCalls });
+      if (cb) {
+        promise.then(function (r) { cb(r); }, function (e) { cb(null, e); });
+      }
+      return promise;
+    }
+
+    return { call: call, multiCall: multiCall, getSession: function () { return creds; } };
+  }
+
+  // ── Group tree ──
+  async function loadGroupTree() {
+    setProgress(0, "Loading groups...");
+    showProgress(true);
+    try {
+      var groups = await api.call("Get", { typeName: "Group" });
+      groupTree = groups.map(function (g) {
+        return {
+          id: g.id,
+          name: g.name || g.id,
+          parentId: g.parent ? g.parent.id : null,
+          children: []
+        };
+      });
+
+      // Build children references
+      var byId = {};
+      groupTree.forEach(function (g) { byId[g.id] = g; });
+      groupTree.forEach(function (g) {
+        if (g.parentId && byId[g.parentId]) {
+          byId[g.parentId].children.push(g);
+        }
+      });
+
+      renderGroupDropdown();
+      // Default: Company Group selected
+      var companyGroup = groupTree.find(function (g) { return g.id === "GroupCompanyId"; });
+      if (companyGroup) {
+        selectedGroupIds.add(companyGroup.id);
+        updateGroupLabel();
+      }
+    } catch (e) {
+      console.error("Failed to load groups:", e);
+    }
+    showProgress(false);
+  }
+
+  function renderGroupDropdown() {
+    var container = document.getElementById("groupList");
+    container.innerHTML = "";
+
+    // Find root groups (no parent or parent not in tree)
+    var idSet = new Set(groupTree.map(function (g) { return g.id; }));
+    var roots = groupTree.filter(function (g) { return !g.parentId || !idSet.has(g.parentId); });
+
+    roots.sort(function (a, b) { return a.name.localeCompare(b.name); });
+
+    function renderNode(node, depth) {
+      var div = document.createElement("div");
+      div.className = "group-item";
+      div.setAttribute("data-group-id", node.id);
+      div.setAttribute("data-group-name", node.name.toLowerCase());
+
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = selectedGroupIds.has(node.id);
+
+      var indent = document.createElement("span");
+      indent.className = "indent";
+      indent.style.width = (depth * 16) + "px";
+
+      var label = document.createElement("span");
+      label.textContent = node.name;
+
+      div.appendChild(indent);
+      div.appendChild(cb);
+      div.appendChild(label);
+
+      div.addEventListener("click", function (e) {
+        e.stopPropagation();
+        toggleGroup(node.id, !cb.checked);
+        cb.checked = selectedGroupIds.has(node.id);
+        // Also update children checkboxes visually
+        updateCheckboxes();
+      });
+
+      container.appendChild(div);
+
+      node.children.sort(function (a, b) { return a.name.localeCompare(b.name); });
+      node.children.forEach(function (child) { renderNode(child, depth + 1); });
+    }
+
+    roots.forEach(function (r) { renderNode(r, 0); });
+  }
+
+  function toggleGroup(groupId, checked) {
+    var byId = {};
+    groupTree.forEach(function (g) { byId[g.id] = g; });
+    var node = byId[groupId];
+    if (!node) return;
+
+    function setChecked(n, val) {
+      if (val) selectedGroupIds.add(n.id);
+      else selectedGroupIds.delete(n.id);
+      n.children.forEach(function (c) { setChecked(c, val); });
+    }
+    setChecked(node, checked);
+    updateGroupLabel();
+  }
+
+  function updateCheckboxes() {
+    var items = document.querySelectorAll("#groupList .group-item");
+    items.forEach(function (item) {
+      var gid = item.getAttribute("data-group-id");
+      var cb = item.querySelector("input[type='checkbox']");
+      if (cb) cb.checked = selectedGroupIds.has(gid);
+    });
+  }
+
+  function updateGroupLabel() {
+    var el = document.getElementById("groupLabel");
+    if (selectedGroupIds.size === 0) {
+      el.textContent = "Select groups...";
+    } else if (selectedGroupIds.has("GroupCompanyId")) {
+      el.textContent = "Company Group (All)";
+    } else if (selectedGroupIds.size <= 3) {
+      var names = [];
+      groupTree.forEach(function (g) {
+        if (selectedGroupIds.has(g.id)) names.push(g.name);
+      });
+      el.textContent = names.join(", ");
+    } else {
+      el.textContent = selectedGroupIds.size + " groups selected";
+    }
+  }
+
+  // ── Dropdown toggle ──
+  var trigger = document.getElementById("groupTrigger");
+  var dropdown = document.getElementById("groupDropdown");
+  var shield = document.getElementById("clickShield");
+
+  trigger.addEventListener("click", function () {
+    var isOpen = dropdown.classList.contains("open");
+    dropdown.classList.toggle("open");
+    shield.classList.toggle("open");
+    if (!isOpen) {
+      document.getElementById("groupSearch").value = "";
+      filterGroups("");
+      document.getElementById("groupSearch").focus();
+    }
+  });
+
+  shield.addEventListener("click", function () {
+    dropdown.classList.remove("open");
+    shield.classList.remove("open");
+  });
+
+  document.getElementById("groupSearch").addEventListener("input", function () {
+    filterGroups(this.value.toLowerCase());
+  });
+
+  function filterGroups(query) {
+    var items = document.querySelectorAll("#groupList .group-item");
+    items.forEach(function (item) {
+      var name = item.getAttribute("data-group-name");
+      item.style.display = (!query || name.indexOf(query) !== -1) ? "flex" : "none";
+    });
+  }
+
+  // ── Date range buttons ──
+  document.querySelectorAll(".date-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".date-btn").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      selectedDays = btn.getAttribute("data-days");
+      if (selectedDays !== "all") selectedDays = parseInt(selectedDays, 10);
+    });
+  });
+
+  // ── Run button ──
+  document.getElementById("runBtn").addEventListener("click", function () {
+    if (!isRunning) runReport();
+  });
+
+  // ── Progress helpers ──
+  function showProgress(visible) {
+    document.getElementById("progressContainer").classList.toggle("visible", visible);
+  }
+
+  function setProgress(pct, text) {
+    document.getElementById("progressBar").style.width = pct + "%";
+    if (text) document.getElementById("progressText").textContent = text;
+  }
+
+  // ── Main report logic ──
+  async function runReport() {
+    if (isRunning) return;
+    isRunning = true;
+    document.getElementById("runBtn").disabled = true;
+    document.getElementById("summary").style.display = "none";
+    document.getElementById("resultsArea").innerHTML = "";
+    showProgress(true);
+    setProgress(5, "Fetching drivers...");
+
+    try {
+      // 1. Determine date range
+      var now = new Date();
+      var endDate = new Date(now);
+      var startDate;
+
+      if (selectedDays === "all") {
+        startDate = new Date("2000-01-01T00:00:00Z");
+      } else {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - selectedDays);
+      }
+      startDate.setHours(0, 0, 0, 0);
+
+      // Cutoff: only flag logs older than 24 hours
+      var cutoff = new Date(now);
+      cutoff.setHours(cutoff.getHours() - 24);
+
+      // 2. Build group filter for driver query
+      var groupFilter = [];
+      if (selectedGroupIds.size > 0 && !selectedGroupIds.has("GroupCompanyId")) {
+        // Find top-level selected groups (parents not selected)
+        selectedGroupIds.forEach(function (gid) {
+          var g = groupTree.find(function (x) { return x.id === gid; });
+          if (g && (!g.parentId || !selectedGroupIds.has(g.parentId))) {
+            groupFilter.push({ id: gid });
+          }
+        });
+      }
+
+      // 3. Fetch drivers
+      var driverSearch = { isDriver: true };
+      if (groupFilter.length > 0) {
+        driverSearch.companyGroups = groupFilter;
+      }
+
+      var drivers = await api.call("Get", { typeName: "User", search: driverSearch });
+      setProgress(20, "Fetched " + drivers.length + " drivers. Loading devices...");
+
+      // 4. Fetch devices for name lookup
+      if (Object.keys(deviceMap).length === 0) {
+        var devices = await api.call("Get", { typeName: "Device" });
+        devices.forEach(function (d) { deviceMap[d.id] = d.name || d.serialNumber || d.id; });
+      }
+      setProgress(30, "Fetching duty status logs...");
+
+      if (drivers.length === 0) {
+        showProgress(false);
+        showNoResults("No drivers found for the selected groups.");
+        isRunning = false;
+        document.getElementById("runBtn").disabled = false;
+        return;
+      }
+
+      // 5. Batch fetch DutyStatusLog via multiCall
+      var batchSize = 50;
+      var allResults = [];
+
+      for (var batchStart = 0; batchStart < drivers.length; batchStart += batchSize) {
+        var batch = drivers.slice(batchStart, batchStart + batchSize);
+        var calls = batch.map(function (driver) {
+          return ["Get", {
+            typeName: "DutyStatusLog",
+            search: {
+              userSearch: { id: driver.id },
+              fromDate: startDate.toISOString(),
+              toDate: endDate.toISOString()
+            }
+          }];
+        });
+
+        var batchResults = await api.multiCall(calls);
+        allResults = allResults.concat(batchResults.map(function (r, i) {
+          return { driver: batch[i], logs: r };
+        }));
+
+        var pct = 30 + Math.round((batchStart + batch.length) / drivers.length * 60);
+        setProgress(pct, "Processed " + (batchStart + batch.length) + " of " + drivers.length + " drivers...");
+      }
+
+      setProgress(95, "Analyzing results...");
+
+      // 6. Analyze unverified logs
+      var results = [];
+
+      allResults.forEach(function (item) {
+        var driver = item.driver;
+        var logs = item.logs || [];
+
+        // Find unverified days: logs with no verifyDateTime and older than 24 hours
+        var unverifiedDays = new Set();
+        var earliestUnverified = null;
+        var latestUnverified = null;
+
+        logs.forEach(function (log) {
+          if (!log.verifyDateTime || log.verifyDateTime === "0001-01-01T00:00:00.000Z") {
+            var logDate = new Date(log.dateTime || log.date);
+            if (logDate < cutoff) {
+              var dayKey = logDate.toISOString().slice(0, 10);
+              unverifiedDays.add(dayKey);
+              if (!earliestUnverified || logDate < earliestUnverified) earliestUnverified = logDate;
+              if (!latestUnverified || logDate > latestUnverified) latestUnverified = logDate;
+            }
+          }
+        });
+
+        if (unverifiedDays.size > 0) {
+          // Find the most recent device assignment
+          var vehicleName = "—";
+          if (logs.length > 0) {
+            var lastLogWithDevice = logs.slice().reverse().find(function (l) { return l.device && l.device.id && l.device.id !== "NoDeviceId"; });
+            if (lastLogWithDevice) {
+              vehicleName = deviceMap[lastLogWithDevice.device.id] || lastLogWithDevice.device.id;
+            }
+          }
+
+          results.push({
+            driverName: (driver.firstName || "") + " " + (driver.lastName || ""),
+            driverId: driver.id,
+            vehicleName: vehicleName,
+            unverifiedCount: unverifiedDays.size,
+            startDate: earliestUnverified,
+            endDate: latestUnverified
+          });
+        }
+      });
+
+      // 7. Sort by most unverified days descending
+      results.sort(function (a, b) { return b.unverifiedCount - a.unverifiedCount; });
+
+      setProgress(100, "Done!");
+
+      // 8. Display
+      var totalDays = results.reduce(function (sum, r) { return sum + r.unverifiedCount; }, 0);
+      document.getElementById("statDrivers").textContent = results.length;
+      document.getElementById("statDays").textContent = totalDays;
+      document.getElementById("summary").style.display = "flex";
+
+      if (results.length === 0) {
+        showNoResults("All drivers have verified their HOS logs. No issues found.");
+      } else {
+        renderTable(results, startDate, endDate);
+      }
+
+    } catch (err) {
+      console.error("Report error:", err);
+      document.getElementById("resultsArea").innerHTML =
+        '<div class="no-results">Error: ' + escapeHtml(err.message || String(err)) + '</div>';
+    }
+
+    showProgress(false);
+    isRunning = false;
+    document.getElementById("runBtn").disabled = false;
+  }
+
+  function showNoResults(msg) {
+    document.getElementById("resultsArea").innerHTML =
+      '<div class="no-results">' + escapeHtml(msg) + '</div>';
+  }
+
+  function renderTable(results, reportStart, reportEnd) {
+    var sortCol = "unverifiedCount";
+    var sortAsc = false;
+
+    function render() {
+      var sorted = results.slice().sort(function (a, b) {
+        var va = a[sortCol], vb = b[sortCol];
+        if (typeof va === "string") va = va.toLowerCase();
+        if (typeof vb === "string") vb = vb.toLowerCase();
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      var html = '<div class="table-container"><table>' +
+        '<thead><tr>' +
+        thCell("Driver Name", "driverName") +
+        thCell("Vehicle", "vehicleName") +
+        thCell("# Unverified Days", "unverifiedCount") +
+        thCell("Date Range", "startDate") +
+        '<th>HOS Logs</th>' +
+        '</tr></thead><tbody>';
+
+      sorted.forEach(function (r) {
+        var rangeStr = formatDate(r.startDate) + " – " + formatDate(r.endDate);
+        var hosUrl = buildHosLink(r.driverId, r.startDate, r.endDate);
+
+        html += '<tr>' +
+          '<td>' + escapeHtml(r.driverName) + '</td>' +
+          '<td>' + escapeHtml(r.vehicleName) + '</td>' +
+          '<td class="unverified-count">' + r.unverifiedCount + '</td>' +
+          '<td>' + rangeStr + '</td>' +
+          '<td class="link-cell"><a href="' + escapeHtml(hosUrl) + '" target="_blank" data-driver-id="' + r.driverId + '" data-start="' + r.startDate.toISOString() + '">View Logs</a></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+      document.getElementById("resultsArea").innerHTML = html;
+
+      // Attach click handlers for in-app nav
+      if (state && state.gotoPage) {
+        document.querySelectorAll(".link-cell a").forEach(function (link) {
+          link.addEventListener("click", function (e) {
+            e.preventDefault();
+            var driverId = this.getAttribute("data-driver-id");
+            var startStr = this.getAttribute("data-start");
+            state.gotoPage("hosLogs", {
+              dateTime: startStr,
+              driver: { id: driverId }
+            });
+          });
+        });
+      }
+
+      // Attach sort handlers
+      document.querySelectorAll("thead th[data-col]").forEach(function (th) {
+        th.addEventListener("click", function () {
+          var col = this.getAttribute("data-col");
+          if (sortCol === col) { sortAsc = !sortAsc; }
+          else { sortCol = col; sortAsc = true; }
+          if (col === "unverifiedCount") sortAsc = !sortAsc; // default desc for count
+          render();
+        });
+      });
+    }
+
+    function thCell(label, col) {
+      var arrow = "";
+      if (sortCol === col) arrow = sortAsc ? " &#9650;" : " &#9660;";
+      return '<th data-col="' + col + '">' + label + '<span class="sort-arrow">' + arrow + '</span></th>';
+    }
+
+    render();
+  }
+
+  function buildHosLink(driverId, start, end) {
+    var s = formatDateUrl(start);
+    var e = formatDateUrl(end);
+    var base = "https://" + serverUrl + "/" + database + "/#hosLogs";
+    return base + ",dateRange:(" + s + "," + e + "),driver:!" + driverId + "!";
+  }
+
+  function formatDate(d) {
+    if (!d) return "—";
+    return (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+  }
+
+  function formatDateUrl(d) {
+    if (!d) return "";
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+})();
+</script>
+</body>
+</html>

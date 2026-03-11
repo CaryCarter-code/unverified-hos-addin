@@ -1,0 +1,16 @@
+{
+  "name": "Unverified HOS Logs",
+  "supportEmail": "support@geotab.com",
+  "version": "1.0.0",
+  "items": [
+    {
+      "url": "index.html",
+      "path": "ActivityLink/",
+      "menuName": {
+        "en": "Unverified HOS Logs"
+      },
+      "icon": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/clipboard-alert-outline.svg"
+    }
+  ],
+  "isSigned": false
+}
