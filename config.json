@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "items": [
     {
-      "url": "index.html",
+      "url": "https://carycarter-code.github.io/unverified-hos-addin/index.html",
       "path": "ActivityLink/",
       "menuName": {
         "en": "Unverified HOS Logs"
