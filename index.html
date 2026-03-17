@@ -373,7 +373,7 @@
   <h2>Connect to MyGeotab</h2>
   <div class="field">
     <label>Database</label>
-    <input type="text" id="loginDb" value="geotab_fleet" />
+    <input type="text" id="loginDb" value="abc_company" />
   </div>
   <div class="field">
     <label>Email</label>
@@ -385,7 +385,7 @@
   </div>
   <div class="field">
     <label>Server (optional)</label>
-    <input type="text" id="loginServer" placeholder="my.geotab.com" />
+    <input type="text" id="loginServer" placeholder="my.geotab.com" value="mypreview.geotab.com" />
   </div>
   <button class="login-btn" id="loginBtn">Sign In</button>
   <div class="login-error" id="loginError"></div>
@@ -459,8 +459,8 @@
   // ── State ──
   let api = null;
   let state = null;
-  let database = "geotab_fleet";
-  let serverUrl = "my.geotab.com";
+  let database = "abc_company";
+  let serverUrl = "mypreview.geotab.com";
   let groupTree = [];          // flat list with parentId
   let selectedGroupIds = new Set();
   let deviceMap = {};          // deviceId → name
